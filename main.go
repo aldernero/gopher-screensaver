@@ -40,6 +40,8 @@ type game struct {
 	screenHeight float64
 	imgWidth     float64
 	imgHeight    float64
+	lastX        int
+	lastY        int
 	state
 }
 
@@ -51,9 +53,24 @@ func (g *game) Setup() {
 	xyAngle := gaul.Tau * rand.Float64()
 	g.vel = gaul.Vec2{X: maxSpeed * math.Cos(xyAngle), Y: maxSpeed * math.Sin(xyAngle)}
 	g.started = time.Now()
+	g.lastX = -1
+	g.lastY = -1
 }
 
 func (g *game) Update() error {
+	// Quit if the mouse or any key is pressed
+	x, y := ebiten.CursorPosition()
+	if g.lastX == -1 && g.lastY == -1 {
+		g.lastX = x
+		g.lastY = y
+	} else {
+		if x != g.lastX || y != g.lastY {
+			return ebiten.Termination
+		}
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyEscape) {
+		return ebiten.Termination
+	}
 	if time.Now().After(g.started.Add(maxTime * time.Second)) {
 		g.Setup()
 		return nil
